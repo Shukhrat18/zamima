@@ -135,7 +135,8 @@ body{font-family:'Source Sans 3',sans-serif;background:#1a1208;min-height:100vh;
     </table>
   </div>
   <div class="dl">
-    <button class="btn bg" onclick="dlXlsx()">⬇️ Зеркашии Excel</button>
+    <button class="btn bg" onclick="dlXlsx()">⬇️ Як донишҷӯ — Excel</button>
+    <button class="btn bg" style="background:linear-gradient(135deg,#2a6e2a,#3d9e3d);color:#fff" onclick="dlAll()">⬇️ Ҳамаи донишҷӯён — Excel</button>
   </div>
 </div>
 
@@ -330,8 +331,18 @@ function dlXlsx(){
   if(!n){alert('Аввал донишҷӯро интихоб кунед!');return;}
   const d=SD[n]; if(!d) return;
   const wb=XLSX.utils.book_new();
+  addStudentSheet(wb,n,d);
+  XLSX.writeFile(wb,`${n}_баҳоҳо.xlsx`);
+}
+
+// Safe sheet name: max 31 chars, no forbidden chars
+function safeSheet(name){
+  return name.replace(/[:\\\/\?\*\[\]]/g,'').substring(0,31);
+}
+
+function addStudentSheet(wb,name,d){
   const ws=[];
-  ws.push([`Донишҷӯ: ${n}`]);
+  ws.push([`Донишҷӯ: ${name}`]);
   ws.push([`Гурӯҳ: ${d.group}`]);
   ws.push([]);
   ws.push(['#','Нимсола','Номи фан','Кредит','Баҳо %','Ҳарф','Рақам','Ифодаи баҳо ба таври анъанавӣ']);
@@ -340,13 +351,81 @@ function dlXlsx(){
     sem.grades.forEach(g=>{
       const nm=g.trad?g.trad.match(/^(\d)/):null;
       const tradNum=nm?nm[1]:(g.trad||'');
-      ws.push([num++,sem.snum,g.subj,g.credit||'',g.pct!==null?g.pct:(g.absent?'комёб':''),g.letter||(g.absent?'комёб':''),g.numEq||'',tradNum]);
+      ws.push([num++,sem.snum,g.subj,g.credit||'',
+        g.pct!==null?g.pct:(g.absent?'комёб':''),
+        g.letter||(g.absent?'комёб':''),
+        g.numEq||'',tradNum]);
     });
   });
   const sheet=XLSX.utils.aoa_to_sheet(ws);
   sheet['!cols']=[{wch:4},{wch:9},{wch:36},{wch:8},{wch:10},{wch:8},{wch:8},{wch:8}];
-  XLSX.utils.book_append_sheet(wb,sheet,'Баҳоҳо');
-  XLSX.writeFile(wb,`${n}_баҳоҳо.xlsx`);
+  // "Back to main" hyperlink in cell A1 area — put in row after data
+  const backRow=ws.length+1;
+  // Add back-link cell: formula hyperlink to АСОСӢ sheet
+  const backCellRef=XLSX.utils.encode_cell({r:backRow,c:0});
+  sheet[backCellRef]={
+    v:'← Ба рӯйхати асосӣ',
+    l:{Target:"#АСОСӢ!A1"},
+    s:{font:{color:{rgb:'0a2d5c'},bold:true,underline:true}}
+  };
+  if(!sheet['!ref']){
+    sheet['!ref']=`A1:H${backRow+1}`;
+  } else {
+    const ref=XLSX.utils.decode_range(sheet['!ref']);
+    ref.e.r=Math.max(ref.e.r,backRow);
+    sheet['!ref']=XLSX.utils.encode_range(ref);
+  }
+  XLSX.utils.book_append_sheet(wb,sheet,safeSheet(name));
+}
+
+function dlAll(){
+  const names=Object.keys(SD).sort((a,b)=>a.localeCompare(b,'tg'));
+  if(!names.length){alert('Аввал файли Excel-ро бор кунед!');return;}
+
+  const wb=XLSX.utils.book_new();
+
+  // ── MASTER SHEET ──────────────────────────────────────────────
+  const masterData=[
+    ['РӮЙХАТИ ДОНИШҶӮЁН'],
+    [],
+    ['#','Ному насаб','Гурӯҳ','Ҷамъи фан','Варақа']
+  ];
+  const masterSheet=XLSX.utils.aoa_to_sheet(masterData);
+  masterSheet['!cols']=[{wch:5},{wch:42},{wch:14},{wch:12},{wch:20}];
+
+  names.forEach((name,i)=>{
+    const d=SD[name];
+    const tot=d.sems.reduce((s,x)=>s+x.grades.length,0);
+    const rowIdx=3+i; // 0-based: row 0,1,2 = header rows above
+    const numCell=XLSX.utils.encode_cell({r:rowIdx,c:0});
+    const nameCell=XLSX.utils.encode_cell({r:rowIdx,c:1});
+    const grpCell=XLSX.utils.encode_cell({r:rowIdx,c:2});
+    const totCell=XLSX.utils.encode_cell({r:rowIdx,c:3});
+    const linkCell=XLSX.utils.encode_cell({r:rowIdx,c:4});
+
+    masterSheet[numCell]={t:'n',v:i+1};
+    masterSheet[nameCell]={t:'s',v:name};
+    masterSheet[grpCell]={t:'s',v:d.group||''};
+    masterSheet[totCell]={t:'n',v:tot};
+
+    const sn=safeSheet(name);
+    masterSheet[linkCell]={
+      t:'s',v:'📋 Варақа',
+      l:{Target:`#'${sn}'!A1`},
+      s:{font:{color:{rgb:'0a2d5c'},bold:true,underline:true}}
+    };
+  });
+
+  const lastRow=3+names.length-1;
+  masterSheet['!ref']=`A1:E${lastRow+1}`;
+  XLSX.utils.book_append_sheet(wb,masterSheet,'АСОСӢ');
+
+  // ── STUDENT SHEETS ────────────────────────────────────────────
+  names.forEach(name=>{
+    addStudentSheet(wb,name,SD[name]);
+  });
+
+  XLSX.writeFile(wb,`Ҳамаи_донишҷӯён_баҳоҳо.xlsx`);
 }
 </script>
 </body>
