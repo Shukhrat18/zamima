@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Варақаи Баҳои Донишҷӯ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@300;400;600&display=swap');
+:root {
+  --gold:#c9a84c; --gold-l:#e8c96e; --dark:#1a1208; --deep:#2d1f0a;
+  --cream:#fdf6e3; --cream2:#f5e6c0; --parch:#f0dda0; --border:#8b6914;
+  --red:#8b0000; --green:#1a5c1a; --blue:#0a2d5c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Source Sans 3',sans-serif;background:#1a1208;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center;}
+.hdr{text-align:center;margin-bottom:20px;}
+.hdr h1{font-family:'Playfair Display',serif;color:var(--gold);font-size:1.65rem;letter-spacing:2px;text-shadow:0 0 20px rgba(201,168,76,.4);}
+.hdr p{color:#a08040;font-size:.8rem;margin-top:4px;letter-spacing:1px;}
+.orn{color:var(--gold);font-size:.95rem;opacity:.6;letter-spacing:4px;}
+
+/* Upload */
+.upz{width:100%;max-width:700px;background:linear-gradient(135deg,#2d1f0a,#1a1208);border:2px dashed var(--gold);border-radius:12px;padding:34px;text-align:center;cursor:pointer;transition:.3s;margin-bottom:18px;}
+.upz:hover,.upz.drag{border-color:var(--gold-l);background:#3a2810;}
+.upz .ic{font-size:2.6rem;margin-bottom:8px;}
+.upz h3{color:var(--gold);font-family:'Playfair Display',serif;margin-bottom:5px;}
+.upz p{color:#a08040;font-size:.82rem;}
+#fi{display:none;}
+
+.pbar{width:100%;max-width:700px;background:#2d1f0a;border-radius:8px;height:5px;margin-bottom:12px;overflow:hidden;display:none;}
+.pfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));width:0%;transition:width .3s;border-radius:8px;}
+
+/* Controls */
+.ctrl{width:100%;max-width:700px;display:none;gap:14px;margin-bottom:18px;align-items:flex-end;flex-wrap:wrap;}
+.sel-wrap{flex:1;min-width:250px;}
+.sel-wrap label{display:block;color:#a08040;font-size:.76rem;margin-bottom:5px;letter-spacing:.5px;}
+.sel{width:100%;padding:12px 40px 12px 16px;background:var(--deep);border:1.5px solid var(--border);border-radius:8px;color:var(--cream);font-size:.93rem;font-family:'Source Sans 3',sans-serif;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;transition:border-color .2s;}
+.sel:focus{border-color:var(--gold);}
+.sel option{background:#2d1f0a;color:var(--cream);}
+.stlbl{color:#a08040;font-size:.76rem;white-space:nowrap;padding-bottom:12px;}
+
+/* Card */
+.card{width:100%;max-width:940px;display:none;}
+.shdr{background:linear-gradient(135deg,var(--deep) 0%,#3a2810 50%,var(--deep) 100%);border:2px solid var(--gold);border-radius:12px 12px 0 0;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+.sname{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold-l);}
+.smeta{color:#a08040;font-size:.8rem;margin-top:2px;}
+.sbadge{background:var(--gold);color:var(--dark);padding:4px 13px;border-radius:20px;font-size:.76rem;font-weight:600;letter-spacing:.5px;white-space:nowrap;}
+
+/* Table wrapper */
+.tbl-wrap{background:var(--cream);border:2px solid var(--gold);border-top:none;border-radius:0 0 12px 12px;overflow-x:auto;}
+.gtbl{width:100%;border-collapse:collapse;font-size:.85rem;}
+.gtbl thead{background:linear-gradient(90deg,#2d1f0a,#3a2810);}
+.gtbl thead th{color:var(--gold);padding:9px 11px;font-size:.74rem;font-weight:600;letter-spacing:.3px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;}
+.gtbl tbody tr{border-bottom:1px solid #e0cc90;transition:background .12s;}
+.gtbl tbody tr:hover{background:#faeac8;}
+.gtbl td{padding:8px 11px;color:var(--dark);vertical-align:middle;}
+
+/* Sem number cell highlight */
+.td-sem{font-weight:700;color:var(--blue);text-align:center;font-size:.9rem;}
+
+/* Badges */
+.gl{display:inline-block;padding:2px 8px;border-radius:9px;font-weight:700;font-size:.78rem;}
+.gA{background:#d4edda;color:#155724;} .gB{background:#cce5ff;color:#004085;}
+.gC{background:#fff3cd;color:#856404;} .gD{background:#f8d7da;color:#721c24;}
+.gX{background:#e9ecef;color:#495057;font-style:italic;font-weight:400;}
+.t5{color:var(--green);font-weight:700;} .t4{color:var(--blue);font-weight:600;}
+.t3{color:#7d5a00;} .t2{color:var(--red);font-weight:700;}
+.crb{font-weight:600;color:#6b4c00;}
+
+/* Download */
+.dl{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;}
+.btn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-family:'Source Sans 3',sans-serif;font-weight:600;letter-spacing:.4px;transition:.2s;display:flex;align-items:center;gap:7px;}
+.bg{background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--dark);}
+.bg:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,168,76,.35);}
+
+@media(max-width:600px){
+  .shdr{flex-direction:column;gap:8px;align-items:flex-start;}
+  .gtbl thead th,.gtbl td{padding:6px 7px;font-size:.77rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="orn">✦ ✦ ✦</div>
+  <h1>ВАРАҚАИ БАҲОИ ДОНИШҶӮ</h1>
+  <p>Системаи дидани баҳоҳо аз рӯи Excel-файл</p>
+</div>
+
+<div class="upz" id="upz" onclick="document.getElementById('fi').click()">
+  <div class="ic">📂</div>
+  <h3>Файли Excel-ро бор кунед</h3>
+  <p>Файли <strong>.xlsx</strong>-ро ин ҷо кашеду партоед ё пахш кунед</p>
+  <input type="file" id="fi" accept=".xlsx,.xls">
+</div>
+<div class="pbar" id="pb"><div class="pfill" id="pf"></div></div>
+
+<div class="ctrl" id="ctrl">
+  <div class="sel-wrap">
+    <label>ҶУСТУҶӮ (нависед)</label>
+    <input type="text" class="sel" id="sinput" placeholder="Номи донишҷӯро нависед..." oninput="onSearch()" autocomplete="off">
+  </div>
+  <div class="sel-wrap">
+    <label>РӮЙХАТ (алифбо тартиб)</label>
+    <select class="sel" id="ssel" onchange="onSel()">
+      <option value="">— Номро интихоб кунед —</option>
+    </select>
+  </div>
+  <div class="stlbl" id="stlbl"></div>
+</div>
+
+<div class="card" id="card">
+  <div class="shdr">
+    <div>
+      <div class="sname" id="cn"></div>
+      <div class="smeta" id="cm"></div>
+    </div>
+    <div class="sbadge" id="cb"></div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="gtbl">
+      <thead>
+        <tr>
+          <th style="width:38px">#</th>
+          <th style="width:44px">Нимсола</th>
+          <th>Номи фан</th>
+          <th style="width:58px">Кредит</th>
+          <th style="width:76px">Баҳо %</th>
+          <th style="width:68px">Ҳарф</th>
+          <th style="width:58px">Рақам</th>
+          <th>Ифодаи баҳо ба таври анъанавӣ</th>
+        </tr>
+      </thead>
+      <tbody id="gb"></tbody>
+    </table>
+  </div>
+  <div class="dl">
+    <button class="btn bg" onclick="dlXlsx()">⬇️ Зеркашии Excel</button>
+  </div>
+</div>
+
+<script>
+let SD = {}; // studentData
+
+// drag/drop
+const upz = document.getElementById('upz');
+upz.addEventListener('dragover', e=>{e.preventDefault();upz.classList.add('drag');});
+upz.addEventListener('dragleave',()=>upz.classList.remove('drag'));
+upz.addEventListener('drop',e=>{e.preventDefault();upz.classList.remove('drag');if(e.dataTransfer.files[0])go(e.dataTransfer.files[0]);});
+document.getElementById('fi').addEventListener('change',e=>{if(e.target.files[0])go(e.target.files[0]);});
+
+function go(file){
+  const pb=document.getElementById('pb'), pf=document.getElementById('pf');
+  pb.style.display='block'; pf.style.width='10%';
+  const fr=new FileReader();
+  fr.onload=e=>{
+    pf.style.width='45%';
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      pf.style.width='75%';
+      SD=parse(wb);
+      pf.style.width='100%';
+      setTimeout(()=>{pb.style.display='none';pf.style.width='0%';upz.style.display='none';buildUI();},300);
+    }catch(err){alert('Хатогӣ: '+err.message);pb.style.display='none';}
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+function parse(wb){
+  const data={};
+  const SKIP=['Лист1','Sheet1','Лист2','Лист3'];
+  for(const sn of wb.SheetNames){
+    if(SKIP.includes(sn)) continue;
+    const ws=wb.Sheets[sn];
+    const arr=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+
+    // find semester blocks
+    const blocks=[];
+    for(let i=0;i<arr.length;i++){
+      const v=String(arr[i][0]||'');
+      if(/Гурӯ[хҳ]и|Гурухи/i.test(v)) blocks.push(i);
+    }
+
+    blocks.forEach((sr,bi)=>{
+      const er=bi+1<blocks.length?blocks[bi+1]:arr.length;
+      const info=String(arr[sr][0]||'');
+      const kM=info.match(/Курси\s*(\d)/), nM=info.match(/Нимсолаи\s*(\w+)/);
+      const nimMap={'якум':'1','дуюм':'2','якум':'1'};
+      const k=kM?parseInt(kM[1]):null;
+      const nRaw=nM?nM[1]:'';
+      const n=nRaw?(nimMap[nRaw]||(/^\d/.test(nRaw)?nRaw:null)):null;
+      // snum: derive from k+n if both valid, else use block index+1
+      let snum;
+      if(k&&n) snum=(k-1)*2+parseInt(n);
+      else snum=bi+1;
+      const kLbl=k?`Курс ${k}`:`Блок ${bi+1}`;
+      const nLbl=n?`, Нимсола ${n}`:'';
+      const slbl=`${snum}-нимсола (${kLbl}${nLbl})`;
+      const yM=info.match(/соли хониши\s*([\d\-]+)/);
+      const yr=yM?yM[1]:'';
+
+      // find subject row
+      let subjR=-1;
+      for(let off=1;off<=5;off++){
+        if(sr+off<arr.length&&String(arr[sr+off][0]||'').includes('Раками')){subjR=sr+off;break;}
+      }
+      if(subjR<0) return;
+
+      // parse subjects — credits are embedded "ТХТ кредит 4" or "Забони тоҷикӣ 3 кредит"
+      const subjs=[];
+      const row=arr[subjR]||[];
+      for(let c=2;c<row.length;c+=4){
+        const s=row[c];
+        if(!s) continue;
+        const full=String(s).trim();
+        const crM=full.match(/(\d+)\s*кредит|кредит\s*(\d+)/i);
+        const cr=crM?(crM[1]||crM[2]):null;
+        const nm2=full.replace(/\s*\d+\s*кредит\s*/ig,'').replace(/\s*кредит\s*\d*/ig,'').trim();
+        subjs.push({col:c,name:nm2,credit:cr});
+      }
+
+      // first student row
+      let ss=subjR+1;
+      for(let off=1;off<=7;off++){
+        const r=subjR+off;
+        if(r<arr.length){const v=arr[r][0];if(v!==null&&typeof v==='number'&&Number.isInteger(v)&&v>=1){ss=r;break;}}
+      }
+
+      for(let r=ss;r<er;r++){
+        const row2=arr[r]||[];
+        const num=row2[0],name=row2[1];
+        if(typeof num!=='number'||!Number.isInteger(num)||num<1) continue;
+        if(!name||typeof name!=='string'||name.trim().length<3) continue;
+        const cn=name.trim();
+        if(!data[cn]) data[cn]={sems:[],group:''};
+        if(!data[cn].group) data[cn].group=sn;
+
+        const grades=subjs.map(({col,name:sn2,credit})=>{
+          const pct=row2[col], lt=row2[col+1], nq=row2[col+2], tr=row2[col+3];
+          const ltStr=lt?String(lt):'';
+          const absent=ltStr.toLowerCase()==='комёб'||String(pct||'').toLowerCase()==='комёб';
+          return{
+            subj:sn2, credit,
+            pct:typeof pct==='number'?pct:null,
+            letter:(!absent&&ltStr&&ltStr!=='null')?ltStr:null,
+            absent,
+            numEq:nq&&String(nq)!=='null'?String(nq):null,
+            trad:tr&&String(tr)!=='null'?String(tr):null
+          };
+        });
+        data[cn].sems.push({slbl,snum,yr,grades});
+      }
+    });
+  }
+  // sort sems
+  for(const n of Object.keys(data)) data[n].sems.sort((a,b)=>a.snum-b.snum);
+  return data;
+}
+
+function buildUI(){
+  const names=Object.keys(SD).sort((a,b)=>a.localeCompare(b,'tg'));
+  const sel=document.getElementById('ssel');
+  names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  document.getElementById('stlbl').textContent=`Ҷамъ: ${names.length} нафар`;
+  document.getElementById('ctrl').style.display='flex';
+}
+
+function onSearch(){
+  const q=document.getElementById('sinput').value.trim().toLowerCase();
+  const sel=document.getElementById('ssel');
+  // sync select to best match
+  const opts=Array.from(sel.options);
+  const match=opts.find(o=>o.value.toLowerCase().includes(q));
+  if(match){ sel.value=match.value; render(match.value); }
+  else if(!q){ sel.value=''; document.getElementById('card').style.display='none'; }
+}
+
+function onSel(){
+  const n=document.getElementById('ssel').value;
+  document.getElementById('sinput').value=n;
+  if(!n){document.getElementById('card').style.display='none';return;}
+  render(n);
+}
+
+function render(n){
+  const d=SD[n]; if(!d) return;
+  document.getElementById('cn').textContent=n;
+  document.getElementById('cm').textContent=d.group?`Гурӯҳи ${d.group}`:'';
+  const tot=d.sems.reduce((s,x)=>s+x.grades.length,0);
+  document.getElementById('cb').textContent=`${d.sems.length} нимсола · ${tot} фан`;
+  document.getElementById('card').style.display='block';
+
+  const gb=document.getElementById('gb');
+  gb.innerHTML='';
+  let gnum=1;
+
+  d.sems.forEach(sem=>{
+    sem.grades.forEach(g=>{
+      const tr=document.createElement('tr');
+      const pdisp=g.pct!==null?g.pct.toFixed(2):(g.absent?'—':'-');
+      let lh='';
+      if(g.absent) lh=`<span class="gl gX">комёб</span>`;
+      else if(g.letter){
+        const c=g.letter[0]==='A'?'gA':g.letter[0]==='B'?'gB':g.letter[0]==='C'?'gC':g.letter[0]==='D'?'gD':'gX';
+        lh=`<span class="gl ${c}">${g.letter}</span>`;
+      } else lh='-';
+      // trad: show only number part
+      let th='-';
+      if(g.trad){
+        const nm=g.trad.match(/^(\d)/);
+        const cls=g.trad.includes('аъло')?'t5':g.trad.includes('хуб')?'t4':g.trad.includes('миёна')?'t3':'t2';
+        th=`<span class="${cls}">${nm?nm[1]:g.trad}</span>`;
+      }
+      tr.innerHTML=`
+        <td>${gnum++}</td>
+        <td class="td-sem">${sem.snum}</td>
+        <td>${g.subj}</td>
+        <td class="crb">${g.credit||'-'}</td>
+        <td>${pdisp}</td>
+        <td>${lh}</td>
+        <td>${g.numEq||'-'}</td>
+        <td>${th}</td>`;
+      gb.appendChild(tr);
+    });
+  });
+}
+
+function dlXlsx(){
+  const n=document.getElementById('ssel').value;
+  if(!n){alert('Аввал донишҷӯро интихоб кунед!');return;}
+  const d=SD[n]; if(!d) return;
+  const wb=XLSX.utils.book_new();
+  const ws=[];
+  ws.push([`Донишҷӯ: ${n}`]);
+  ws.push([`Гурӯҳ: ${d.group}`]);
+  ws.push([]);
+  ws.push(['#','Нимсола','Номи фан','Кредит','Баҳо %','Ҳарф','Рақам','Ифодаи баҳо ба таври анъанавӣ']);
+  let num=1;
+  d.sems.forEach(sem=>{
+    sem.grades.forEach(g=>{
+      const nm=g.trad?g.trad.match(/^(\d)/):null;
+      const tradNum=nm?nm[1]:(g.trad||'');
+      ws.push([num++,sem.snum,g.subj,g.credit||'',g.pct!==null?g.pct:(g.absent?'комёб':''),g.letter||(g.absent?'комёб':''),g.numEq||'',tradNum]);
+    });
+  });
+  const sheet=XLSX.utils.aoa_to_sheet(ws);
+  sheet['!cols']=[{wch:4},{wch:9},{wch:36},{wch:8},{wch:10},{wch:8},{wch:8},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,sheet,'Баҳоҳо');
+  XLSX.writeFile(wb,`${n}_баҳоҳо.xlsx`);
+}
+</script>
+</body>
+</html>
